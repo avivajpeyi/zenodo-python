@@ -282,3 +282,39 @@ class ZenodoHandler:
         url = "{}deposit/depositions/{}/actions/newversion".format(
             self.base_url, deposition_id)
         return self.session.post(url)
+
+    def deposition_edit_metadata(self, deposition_id, metadata):
+        """
+        Edit deposition metadata.
+
+        - Path: /api/deposit/depositions/:id
+        - Method: PUT
+
+        :param deposition_id: Deposition identifier
+        :param metadata: Dictionary of metadata
+        """
+        url = "{}deposit/depositions/{}".format(self.base_url, deposition_id)
+        headers = {"Content-Type": "application/json"}
+        return self.session.put(url, data=json.dumps(metadata), headers=headers)
+
+    def get_deposition_id_from_title(self, title):
+        """
+        Get deposition id from title
+
+        :param title: Title of the deposition
+        """
+        r = self.deposition_list()
+        for deposition in r.json():
+            if deposition['metadata']['title'] == title:
+                return deposition['id']
+        raise ValueError("No deposition with title '{}' found".format(title))
+
+    def get_deposition_titles(self):
+        """
+        Get deposition titles
+        """
+        r = self.deposition_list()
+        titles = [deposition['metadata'].get('title', None) for deposition in r.json()]
+        return [title for title in titles if title is not None]
+
+
