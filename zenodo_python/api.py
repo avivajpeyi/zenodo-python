@@ -1,27 +1,10 @@
-"""
-Copyright (c) 2015 Federal Institute for Risk Assessment (BfR), Germany
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-Contributors:
-    Department Biological Safety - BfR
-"""
 import enum
 import json
 import os
 
 import requests
+
+TEST_MODE = True
 
 
 class StatusCode(enum.Enum):
@@ -41,10 +24,10 @@ class StatusCode(enum.Enum):
     internal_server_error = 500
 
 
-class ZenodoHandler:
-    def __init__(self, access_token=None, proxies=None, test=False):
+class Api:
+    def __init__(self, access_token=None, proxies=None, test=TEST_MODE):
         """
-        Initializes ZenodoHandler.
+        Initializes Api.
 
         :param access_token: Personal access token
         :param proxies: Dictionary with proxies for each protocol. E.g::
@@ -105,6 +88,7 @@ class ZenodoHandler:
         """
         url = "{}deposit/depositions/{}".format(self.base_url, deposition_id)
         return self.session.get(url)
+
 
     def deposition_update(self, deposition_id, data):
         """
@@ -297,17 +281,19 @@ class ZenodoHandler:
         headers = {"Content-Type": "application/json"}
         return self.session.put(url, data=json.dumps(metadata), headers=headers)
 
-    def get_deposition_id_from_title(self, title):
+    def get_deposition_ids_from_title(self, title):
         """
         Get deposition id from title
 
         :param title: Title of the deposition
         """
         r = self.deposition_list()
+        ids = []
         for deposition in r.json():
-            if deposition['metadata']['title'] == title:
-                return deposition['id']
-        raise ValueError("No deposition with title '{}' found".format(title))
+            dep_title = deposition['metadata'].get('title', None)
+            if dep_title == title:
+                ids.append(deposition['id'])
+        return ids
 
     def get_deposition_titles(self):
         """
@@ -317,4 +303,9 @@ class ZenodoHandler:
         titles = [deposition['metadata'].get('title', None) for deposition in r.json()]
         return [title for title in titles if title is not None]
 
-
+    def get_deposition_ids(self):
+        """
+        Get deposition ids
+        """
+        r = self.deposition_list()
+        return [deposition['id'] for deposition in r.json()]
