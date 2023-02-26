@@ -41,6 +41,17 @@ class TestDeposition(unittest.TestCase):
         self.assertTrue(fname in d1.filenames)
 
 
+    def test_make_new_version(self):
+        d = self.d
+        fname = make_tmp_file(self.tmpdir)
+        d.upload_files(fname)
+        d1 = Deposition.from_title(title="TEST")
+        self.assertTrue(fname in d1.filenames)
+        d1.make_new_version()
+        d2 = Deposition.from_title(title="TEST")
+        self.assertTrue(fname in d2.filenames)
+        self.assertTrue(d1.version != d2.version)
+
 
 
 if __name__ == '__main__':
